@@ -19,6 +19,7 @@ from skimage.morphology import erosion
 from shapely.geometry import mapping
 from shapely.wkt import loads
 import rioxarray
+from pyproj import Transformer
 
 
 class Segment():
@@ -375,3 +376,23 @@ def rasterio_clip(dem_path, polygon_set, epsg):
 
     mask.rio.to_raster(dem_path[:-4] + "_mask.tif")
     return mask
+
+
+def coords_to_xy(dem_path, glaciers, crs_from=4326, crs_to=4326):
+    dataset = rio.open(dem_path, 'r')
+
+    coords = []
+    RGI = []
+    for glacier in range(len(glaciers)):
+        x = glaciers['CenLon'][glacier]
+        y = glaciers['CenLat'][glacier]
+
+        transformer = Transformer.from_crs(crs_from, crs_to)
+        x, y = transformer.transform(y, x)
+
+        #rows, cols = rio.transform.rowcol(dataset.transform, x, y)
+        rows, cols = dataset.index(y, x)
+        coords.append([rows, cols])
+        RGI.append(glaciers['RGIId'][glacier])
+
+    return np.array(coords), RGI

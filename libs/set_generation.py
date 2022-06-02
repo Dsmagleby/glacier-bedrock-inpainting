@@ -181,7 +181,7 @@ def create_test_images_from_glacier_center(image, mask, patch_size, coords_frame
     return np.array(patches), np.array(masks), np.array(RGI)
 
 
-def create_dataset_train(image, mask, patch_size, max_iter, seen, threshold=None, mode=None, random_state=None, invalid_value=-32767.):
+def create_dataset_train(image, mask, patch_size, max_iter, seen, max_height, threshold=None, mode=None, random_state=None, invalid_value=-32767.):
 
     i_h, i_w = image.shape[:2]
     s_h, s_w = mask.shape[:2]
@@ -231,7 +231,7 @@ def create_dataset_train(image, mask, patch_size, max_iter, seen, threshold=None
             append = False
 
         # modified for other mountain ranges
-        if np.amax(patch) > 4800:
+        if np.amax(patch) > max_height:
             append = False
 
         # mode = max:     max of image must be above threshold
@@ -255,13 +255,13 @@ def create_dataset_train(image, mask, patch_size, max_iter, seen, threshold=None
 
     return np.array(patches), seen
 
-def flow_train_dataset(image, mask, patch_size, train_path, val_path, threshold=None, mode=None, total=15000, postfix='', random_state=None, invalid_value=-32767.):
+def flow_train_dataset(image, mask, patch_size, train_path, val_path, max_height, threshold=None, mode=None, total=15000, postfix='', random_state=None, invalid_value=-32767.):
     seen = np.zeros_like(image)
 
     num, limit = 0, total
     pbar = tqdm(total = limit)
     while True:
-        flow, seen = create_dataset_train(image, mask, patch_size, 50000, seen, threshold, mode, random_state, invalid_value)
+        flow, seen = create_dataset_train(image, mask, patch_size, 50000, seen, max_height, threshold, mode, random_state, invalid_value)
         flow = flow[..., np.newaxis]
 
         if len(flow) < 10:
