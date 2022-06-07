@@ -113,7 +113,7 @@ def create_test_images_from_glacier_center(image, mask, patch_size, coords_frame
     cols = np.array(coords_frame['cols'].tolist())
     RGIId = coords_frame['RGIId'].tolist()
 
-    for r, c, id in tqdm(zip(rows, cols, RGIId)):
+    for r, c, id in zip(rows, cols, RGIId):
         r = r - int(p_h/2) if r >= int(p_h/2) else r
         c = c - int(p_w/2) if c >= int(p_w/2) else c
 

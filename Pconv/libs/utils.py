@@ -6,6 +6,7 @@ import itertools
 import numpy as np
 
 import pandas as pd
+import xarray as xr
 import rasterio as rio
 from shapely.geometry import Point, Polygon
 import geopandas as gpd
@@ -341,6 +342,7 @@ def contains_glacier(dem_paths, glaciers, add=0):
 
     for i in range(len(dem_paths)):
         contains_glacier = True
+        print(dem_paths[i])
         max_lat, min_lat, max_lon, min_lon = get_minmax_latlon(dem_paths[i])
 
         # locate all glaciers within tile
@@ -364,12 +366,40 @@ def contains_glacier(dem_paths, glaciers, add=0):
     return df
 
 
+def contains_glacier_(dem_paths, glaciers, add=0):
+    # table to store filepath, glacier presence (True/False) and list of glacier ids in tile
+    columns = ['filepath', 'contains_glacier', 'RGIId']
+    df = pd.DataFrame(columns = columns)
+
+    contains_glacier = True
+    max_lat, min_lat, max_lon, min_lon = get_minmax_latlon(dem_paths)
+
+    # locate all glaciers within tile
+    current_glaciers = glaciers.loc[glaciers['CenLon'] >= min_lon - add]
+    current_glaciers = current_glaciers.loc[current_glaciers['CenLon'] <= max_lon + add]
+    current_glaciers = current_glaciers.loc[current_glaciers['CenLat'] >= min_lat - add]
+    current_glaciers = current_glaciers.loc[current_glaciers['CenLat'] <= max_lat + add]
+
+    # check if above eliminated all
+    if current_glaciers.empty:
+        contains_glacier = False
+
+    # add results to output table
+    current = pd.DataFrame(
+        data=[[dem_paths, contains_glacier, current_glaciers['RGIId'].tolist()]],
+        columns = columns
+    )
+
+    df = pd.concat([df, current], ignore_index = True)
+
+    return df
+
 def rasterio_clip(dem_path, polygon_set, epsg):
     mask = rioxarray.open_rasterio(dem_path)
-    mask[:] = 0
+    mask = xr.zeros_like(mask)
 
     # "EPSG:4326"
-    for glacier in tqdm(range(len(polygon_set))):    
+    for glacier in tqdm(range(len(polygon_set)), leave=False):    
         geom = mapping(loads(str(polygon_set['geometry'][glacier])))
         mask.rio.write_nodata(1., inplace=True)
         mask = mask.rio.clip([geom], epsg, drop=False, invert=True, all_touched=False)
