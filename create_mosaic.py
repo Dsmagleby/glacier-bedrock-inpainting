@@ -6,7 +6,11 @@ import geopandas as gpd
 
 from tqdm import tqdm
 from oggm import utils
+<<<<<<< HEAD
+from Pconv.libs.utils import contains_glacier_, rasterio_clip
+=======
 from libs.utils import contains_glacier_, rasterio_clip
+>>>>>>> ff235f8e07649933f6b15782f11857c141ef0ab7
 
 
 

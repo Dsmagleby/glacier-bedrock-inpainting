@@ -2,14 +2,17 @@ import os
 import random
 import math
 from random import seed
-import itertools
-import numpy as np
 
+#import fiona
+#import geopandas as gpd
 import pandas as pd
 import xarray as xr
 import rasterio as rio
+import numpy as np
+import rioxarray
+import xarray as xr
+
 from shapely.geometry import Point, Polygon
-import geopandas as gpd
 from tqdm import tqdm
 from scipy.special import binom
 from scipy.ndimage import gaussian_filter
@@ -19,7 +22,6 @@ from PIL import Image, ImageDraw
 from skimage.morphology import erosion
 from shapely.geometry import mapping
 from shapely.wkt import loads
-import rioxarray
 from pyproj import Transformer
 
 

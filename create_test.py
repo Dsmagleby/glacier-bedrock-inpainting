@@ -17,13 +17,21 @@ from shapely.geometry import mapping
 from shapely.wkt import loads
 
 from Pconv.libs.utils import coords_to_xy, contains_glacier_
+<<<<<<< HEAD
+from Pconv.libs.set_generation import create_test_images_from_glacier_center
+=======
 from Pconv.libs.set_generation import create_test_images_from_glacier_center, flow_train_images
+>>>>>>> ff235f8e07649933f6b15782f11857c141ef0ab7
 
 
 
 parser = argparse.ArgumentParser(description='Create DEM mosaic from DEM tiles')
 parser.add_argument("--input",  type=str, default=None, help="path to the DEM mosaic")
+<<<<<<< HEAD
+parser.add_argument("--outdir", type=str, default="dataset/test/", help="path for the output file")
+=======
 parser.add_argument("--outdir", type=str, default="dataset/", help="path for the output file")
+>>>>>>> ff235f8e07649933f6b15782f11857c141ef0ab7
 
 parser.add_argument("--region",  type=int, default=11, help="RGI region")
 parser.add_argument("--shape",  type=int, default=256, help="Size of test patches")

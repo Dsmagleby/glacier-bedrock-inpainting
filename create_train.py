@@ -1,24 +1,23 @@
 import os
-import glob
-import cv2
 import argparse
 
-import geopandas as gpd
-import pandas as pd
 import rasterio as rio
-import numpy as np
 
 from oggm import utils
 from tqdm import tqdm
 
+<<<<<<< HEAD:create_train.py
+from Pconv.libs.set_generation import  flow_train_dataset
+=======
 from Pconv.libs.utils import coords_to_xy, contains_glacier
 from Pconv.libs.set_generation import create_test_images_from_glacier_center, flow_train_dataset
+>>>>>>> ff235f8e07649933f6b15782f11857c141ef0ab7:dataset/create_train.py
 
 
 
-parser = argparse.ArgumentParser(description='Create DEM mosaic from DEM tiles')
+parser = argparse.ArgumentParser(description='Create training images')
 parser.add_argument("--input",  type=str, default=None, help="path to the DEM tile folder")
-parser.add_argument("--outdir", type=str, default="DEM_files/mosaic/mosaic.tif", help="path for the output file")
+parser.add_argument("--outdir", type=str, default="dataset/", help="path for the output file")
 
 # currently not used
 parser.add_argument("--region",  type=int, default=11, help="RGI region")
