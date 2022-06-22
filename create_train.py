@@ -6,12 +6,7 @@ import rasterio as rio
 from oggm import utils
 from tqdm import tqdm
 
-<<<<<<< HEAD:create_train.py
 from Pconv.libs.set_generation import  flow_train_dataset
-=======
-from Pconv.libs.utils import coords_to_xy, contains_glacier
-from Pconv.libs.set_generation import create_test_images_from_glacier_center, flow_train_dataset
->>>>>>> ff235f8e07649933f6b15782f11857c141ef0ab7:dataset/create_train.py
 
 
 
