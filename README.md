@@ -1,5 +1,19 @@
 # glacier-bedrock-inpainting
 
+## Censor feedback
+
+The training sampling algorithm might be creating a bias in the model.
+The reason behind this idea, is that the algorithm only samples patches with a middle region,
+that is on average equal to or greater than the lower glacier elevation. This might lead
+the model to think that for every patch the middle region has to be a certain elevation and if
+the surrounding region on average is lower then the middle region, then we might be enforcing
+that the patches are all centered on the top of a parabolic surface shape. This could be causing more
+negative predictions.
+
+Solutions: rethink the training data sampling algorithm AND/OR randomize the glacier position in the test
+data, such that it is not always in the center. The latter makes sense, since the training glaciers are 
+already randomized in such a way. Ideally both.
+
 ## Deepfillv2 fork:
 
 https://github.com/nipponjo/deepfillv2-pytorch
@@ -21,7 +35,7 @@ https://github.com/nipponjo/deepfillv2-pytorch
 
 ## Partial convolutional model forks:
 
-https://github.com/MathiasGruber/PConv-Keras and 
+https://github.com/MathiasGruber/PConv-Keras and
 https://github.com/ezavarygin/PConv2D_Keras
 ```
 @misc{https://doi.org/10.48550/arxiv.1804.07723,
@@ -37,6 +51,7 @@ https://github.com/ezavarygin/PConv2D_Keras
 ```
 
 ## Unet fork:
+
 https://github.com/pietz/unet-keras
 
 
