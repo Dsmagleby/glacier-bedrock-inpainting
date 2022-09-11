@@ -17,21 +17,15 @@ from shapely.geometry import mapping
 from shapely.wkt import loads
 
 from Pconv.libs.utils import coords_to_xy, contains_glacier_
-<<<<<<< HEAD
 from Pconv.libs.set_generation import create_test_images_from_glacier_center
-=======
-from Pconv.libs.set_generation import create_test_images_from_glacier_center, flow_train_images
->>>>>>> ff235f8e07649933f6b15782f11857c141ef0ab7
+
 
 
 
 parser = argparse.ArgumentParser(description='Create DEM mosaic from DEM tiles')
 parser.add_argument("--input",  type=str, default=None, help="path to the DEM mosaic")
-<<<<<<< HEAD
 parser.add_argument("--outdir", type=str, default="dataset/test/", help="path for the output file")
-=======
-parser.add_argument("--outdir", type=str, default="dataset/", help="path for the output file")
->>>>>>> ff235f8e07649933f6b15782f11857c141ef0ab7
+
 
 parser.add_argument("--region",  type=int, default=11, help="RGI region")
 parser.add_argument("--shape",  type=int, default=256, help="Size of test patches")
@@ -113,58 +107,67 @@ def main():
 
 
 
-    # convert lat/lon to x/y for images
-    message = 'Translating lat/lon to x/y: Done'
-    print(message[:28], end='\r')
+     # convert lat/lon to x/y for images
+    print('Translating lat/lon to x/y ...')
     coords, RGI = coords_to_xy(args.input, filtered_gdf)
     coords_frame = pd.DataFrame({'RGIId': RGI, 'rows': coords[:,0], 'cols': coords[:,1]})
     rows = np.array(coords_frame['rows'].tolist())
     cols = np.array(coords_frame['cols'].tolist())
-    print(message); print(' ')
-
-    print("Creating test patches and masks: ... this may take a while ...")
-    patches, masks, RGIId = create_test_images_from_glacier_center(dem, empty, (args.shape, args.shape), 
-                                                                   coords_frame, create_blank=True)
+    RGIId = coords_frame['RGIId'].tolist()
+    print('Done.')
 
 
     mask = rioxarray.open_rasterio(args.input.replace('.tif', '_mask.tif'))
     mask = xr.zeros_like(mask)
     mask_copy = mask
+
+    resolution = float(mask.coords['x'][1] - mask.coords['x'][0])  # calculated on x-axis.
+    print(f"Raster resolution: {resolution}")
+
+
     with tqdm(total=len(coords_frame), leave=True) as progress:
         for glacier in range(len(coords_frame)):
             progress.set_postfix_str(RGIId[glacier])
-            
-            geom = mapping(loads(str(filtered_gdf['geometry'][glacier])))
-            mask.rio.write_nodata(1, inplace=True)
-            mask = mask.rio.clip([geom], "EPSG:4326", drop=False, invert=True, all_touched=False)
-            
-            a = np.where(mask.to_numpy()[0] == 1)
-            if a[0].size > 0:
-                minx = np.min(a[0])
-                maxx = np.max(a[0])
-                miny = np.min(a[1])
-                maxy = np.max(a[1])
-            else:
-                minx, maxx, miny, maxy = 0, 0, 0, 0
-            
-            if maxx-minx > args.shape or maxy-miny > args.shape:
-                tqdm.write("{} with bounding box ({},{}) has been excluded.".format(RGIId[glacier], maxx-minx, maxy-miny))
-            else:
 
+            geom = filtered_gdf['geometry'][glacier]
+            lon_min, lat_min, lon_max, lat_max = geom.bounds
+            dx, dy = (lat_max - lat_min) / resolution, (lon_max - lon_min) / resolution
+
+            mask.rio.write_nodata(1, inplace=True)
+
+            # glacier too small
+            if (dx==0 or dy==0):
+                tqdm.write(f"{RGIId[glacier]} with bounding box ({int(dx)},{int(dy)}) has been excluded.")
+
+            # glacier too big
+            elif (dx > args.shape or dy > args.shape):
+                tqdm.write(f"{RGIId[glacier]} with bounding box ({int(dx)},{int(dy)}) has been excluded.")
+
+            # glacier OK
+            else:
                 r = rows[glacier] - int(256/2) if rows[glacier] >= int(256/2) else rows[glacier]
                 c = cols[glacier] - int(256/2) if cols[glacier] >= int(256/2) else cols[glacier]
-                mask_patch = mask[0, r:r+256, c:c+256]
-                mask_patch = np.array(mask_patch).squeeze()
 
+                # First reduce mask then clip
+                mask = mask[0, r:r + 256, c:c + 256] # clipped to speed up, geometry seems to be correct
+                mask = mask.rio.clip([geom], "EPSG:4326", drop=False, invert=True, all_touched=False, from_disk=True) 
+
+                mask_patch = mask.to_numpy()
+                image_patch = dem[0, r:r + 256, c:c + 256].to_numpy()
+                full_mask = empty[0, r:r + 256, c:c + 256].to_numpy()
+
+
+                # save patches, mask and full masks
                 cv2.imwrite(args.outdir + 'masks/' + RGIId[glacier] + '_mask.tif', mask_patch.astype(np.float32))
-                cv2.imwrite(args.outdir + 'images/' + RGIId[glacier] + '.tif', patches[glacier].astype(np.uint16))
-                cv2.imwrite(args.outdir + 'masks_full/' + RGIId[glacier] +'_mask.tif', masks[glacier].astype(np.float32))
+                cv2.imwrite(args.outdir + 'images/' + RGIId[glacier] + '.tif', image_patch.astype(np.uint16))
+                cv2.imwrite(args.outdir + 'masks_full/' + RGIId[glacier] +'_mask.tif', full_mask.astype(np.float32))
 
             # remove mask
             mask.rio.write_nodata(0, inplace=True)
             mask = mask_copy
             progress.update()
             gc.collect()
+
 
 if __name__ == '__main__':
     main()
